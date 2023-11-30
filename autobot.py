@@ -162,10 +162,6 @@ def execute_of_vpn(args: argparse.Namespace) -> int:
     data = cipher.decrypt(encrypted_data).encode("utf-8")
     [profile] = yaml.safe_load(io.BytesIO(data))["profiles"]
 
-    if args.action == "reconnect":
-        OpenVPN3CMD.reconnect(profile["config"])
-        return 0
-
     if args.action == "connect":
         password = VNGSecure.passcode(profile["pincode"], profile["secret"])
         OpenVPN3CMD.connect(profile["config"], profile["username"], password)
@@ -173,6 +169,10 @@ def execute_of_vpn(args: argparse.Namespace) -> int:
 
     if args.action == "disconnect":
         OpenVPN3CMD.disconnect(profile["config"])
+        return 0
+
+    if args.action == "reconnect":
+        OpenVPN3CMD.reconnect(profile["config"])
         return 0
 
     return (-1)
