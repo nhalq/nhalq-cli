@@ -1,3 +1,8 @@
 #!/usr/bin/bash
 
+WORKDIR=$(realpath $(dirname $0))
+BINDIR=/usr/local/bin
+
+sudo install $WORKDIR/autobot.py $BINDIR/N
 sudo cp bash-completion/autobot /usr/share/bash-completion/completions/autobot
+
