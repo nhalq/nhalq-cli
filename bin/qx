@@ -1,0 +1,7 @@
+#!/usr/bin/python3
+
+import sys
+import nhalqcli.clidriver
+
+if __name__ == '__main__':
+    sys.exit(nhalqcli.clidriver.main())

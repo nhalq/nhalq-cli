@@ -1,5 +1,6 @@
 #!/usr/bin/python3
 
+import pyzcommonlib
 import argparse
 import getpass
 import hashlib
@@ -178,8 +179,22 @@ def execute_of_vpn(args: argparse.Namespace) -> int:
     return (-1)
 
 
+def execute_of_zdenoise(args: argparse.Namespace) -> int:
+    try:
+        item_id = pyzcommonlib.denoise_chunks(args.noise)
+    except:
+        try:
+            item_id = pyzcommonlib.denoise_photo(args.noise)
+        except:
+            print("Can not denoise")
+            return -1
+
+    print("id:", item_id)
+    return 0
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(prog="autobot")
+    parser = argparse.ArgumentParser(prog="qx")
     subparsers = parser.add_subparsers()
 
     vpn_subparser = subparsers.add_parser("vpn")
@@ -187,9 +202,13 @@ def main() -> int:
     vpn_subparser.add_argument("action", choices=(
         "status", "connect", "disconnect", "reconnect"))
 
+    za_subparser = subparsers.add_parser("zdn")
+    za_subparser.set_defaults(execute=execute_of_zdenoise)
+    za_subparser.add_argument("noise")
+
     args = parser.parse_args()
+    if not "execute" in args:
+        parser.print_help()
+        return -1
+
     return args.execute(args)
-
-
-if __name__ == "__main__":
-    exit(main())
