@@ -3,7 +3,6 @@
 import pyzcommonlib
 import argparse
 import getpass
-import hashlib
 import io
 import json
 import pyotp
@@ -11,33 +10,8 @@ import re
 import subprocess
 import yaml
 
-from Crypto import Random
-from Crypto.Cipher import AES
 from typing import *
-
-
-class AESCipher:
-    def __init__(self, password: str) -> None:
-        self.block_size = AES.block_size
-        self.key = hashlib.sha256(password.encode()).digest()
-
-    def pad(self, s: str):
-        remain = self.block_size - len(s) % self.block_size
-        return s + remain * chr(remain)
-
-    def unpad(self, s):
-        return s[:-ord(s[len(s) - 1:])]
-
-    def encrypt(self, plain: str) -> bytes:
-        plain = self.pad(plain)
-        iv = Random.new().read(self.block_size)
-        cipher = AES.new(self.key, AES.MODE_CBC, iv)
-        return iv + cipher.encrypt(plain.encode())
-
-    def decrypt(self, encrypted: bytes) -> str:
-        iv = encrypted[:AES.block_size]
-        cipher = AES.new(self.key, AES.MODE_CBC, iv)
-        return self.unpad(cipher.decrypt(encrypted[AES.block_size:])).decode("utf-8")
+from nhalqcli.secure import AESCipher_OLD
 
 
 class VNGSecure:
@@ -159,7 +133,7 @@ def execute_of_vpn(args: argparse.Namespace) -> int:
 
     with open("/etc/autobot/secret", "rb") as fs:
         encrypted_data = fs.read(2048)
-    cipher = AESCipher(getpass.getpass("Enter your password: "))
+    cipher = AESCipher_OLD(getpass.getpass("Enter your password: "))
     data = cipher.decrypt(encrypted_data).encode("utf-8")
     [profile] = yaml.safe_load(io.BytesIO(data))["profiles"]
 
@@ -169,7 +143,12 @@ def execute_of_vpn(args: argparse.Namespace) -> int:
         return 0
 
     if args.action == "disconnect":
-        OpenVPN3CMD.disconnect(profile["config"])
+        try:
+            OpenVPN3CMD.disconnect(profile["config"])
+        except:
+            print("Wrong password")
+            return 1
+
         return 0
 
     if args.action == "reconnect":
@@ -193,6 +172,18 @@ def execute_of_zdenoise(args: argparse.Namespace) -> int:
     return 0
 
 
+def execute_of_reset_swap(args: argparse.Namespace) -> int:
+    error_code = subprocess.run(["sudo", "swapoff", "-a"]).returncode
+    if error_code:
+        return error_code
+
+    error_code = subprocess.run(["sudo", "swapon", "-a"]).returncode
+    if error_code:
+        return error_code
+
+    return 0
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(prog="qx")
     subparsers = parser.add_subparsers()
@@ -205,6 +196,9 @@ def main() -> int:
     za_subparser = subparsers.add_parser("zdn")
     za_subparser.set_defaults(execute=execute_of_zdenoise)
     za_subparser.add_argument("noise")
+
+    sysctl_subparser = subparsers.add_parser("reset-swap")
+    sysctl_subparser.set_defaults(execute=execute_of_reset_swap)
 
     args = parser.parse_args()
     if not "execute" in args:
