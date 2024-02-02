@@ -1,7 +1,0 @@
-#!/usr/bin/zsh
-
-qx_completer() {
-	#
-}
-
-complete -C qx_completer qx

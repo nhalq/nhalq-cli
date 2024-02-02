@@ -185,7 +185,7 @@ def execute_of_reset_swap(args: argparse.Namespace) -> int:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(prog="qx")
+    parser = argparse.ArgumentParser(prog="nhalq")
     subparsers = parser.add_subparsers()
 
     vpn_subparser = subparsers.add_parser("vpn")
